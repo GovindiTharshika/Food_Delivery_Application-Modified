@@ -7,6 +7,8 @@ const cloudinary = require("cloudinary");
 const fileUpload = require("express-fileupload");
 const errorMiddleware = require("./middlewares/errors");
 app.use(express.json());
+const helmet = require("helmet");
+app.use(helmet());
 app.use(bodyParser.urlencoded({
   extended: true
 }));
