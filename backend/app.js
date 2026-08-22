@@ -15,6 +15,18 @@ app.use(bodyParser.urlencoded({
 app.use(cookieParser());
 app.use(fileUpload());
 
+const session = require('express-session');
+const passport = require('passport');
+
+app.use(session({
+  secret: process.env.JWT_SECRET || 'secret',
+  resave: false,
+  saveUninitialized: true
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+require('./utils/passport');
+
 const mongoSanitize = require("express-mongo-sanitize");
 app.use(mongoSanitize());
 
