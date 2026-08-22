@@ -22,6 +22,19 @@ module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.message = err.message || "Internal Server Error";
 
+  if (err.name === "ValidationError") {
+    err.statusCode = 400;
+    err.message = Object.values(err.errors)
+      .map((validationError) => validationError.message)
+      .join(", ");
+  }
+
+  if (err.code === 11000) {
+    err.statusCode = 400;
+    const field = Object.keys(err.keyValue || {})[0] || "value";
+    err.message = `Duplicate value for field: ${field}. Please use another value.`;
+  }
+
   // ── DEVELOPMENT mode: full error details for debugging ──────────────────
   if (process.env.NODE_ENV === "DEVELOPMENT") {
     return res.status(err.statusCode).json({

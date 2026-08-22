@@ -1,11 +1,11 @@
 # SE4030 – Secure Software Development Assignment
 
 ## Group Information
-*(Please fill in your group members' details below)*
-1. **[Member 1 Name]** - [Index Number]
-2. **[Member 2 Name]** - [Index Number]
-3. **[Member 3 Name]** - [Index Number]
-4. **[Member 4 Name]** - [Index Number]
+
+1. **A.M.K.B. Adikari** - IT23241732
+2. **J.K.C.T. Jayawardhana** - IT23171992
+3. **E.M.G.T.Edirisinha** - IT23243644
+4. **W.A.V.Nuwanga** - IT23360396
 
 ---
 
@@ -41,6 +41,21 @@ This repository contains the modified, secure version of the MERN stack "Food De
 9. **Information Leakage via Errors** (Fixed by sanitizing production error responses)
 
 ---
+
+### Commit History Summary
+
+| Commit Hash | Type | Security Fix / Feature Applied |
+| :--- | :--- | :--- |
+| `eb21c53` | Fix #1 | **NoSQL Injection:** Added `express-mongo-sanitize` |
+| `02c4afa` | Fix #2 | **XSS:** Added `xss-clean` middleware |
+| `1cd1d7a` | Fix #3 | **No Rate Limiting:** Applied `express-rate-limit` (100 reqs/15 min) |
+| `9264200` | Fix #4 | **Missing Security Headers:** Integrated `helmet` |
+| `71b7d60` | Fix #5 | **IDOR:** Verified ownership in `getSingleOrder` |
+| `818f7e1` | Fix #6 | **Weak Password:** Enforced strong password regex validation |
+| `470bda2` | Fix #7 | **Insecure File Upload:** Enforced MIME-type verification for base64 images |
+| `d06a16d` | Fix #8 | **API Secrets:** Moved Cloudinary credentials to `.env` |
+| `3e7f47d` | Fix #9 | **Error Leakage:** Sanitized global production error handling |
+| `964363a` | Feature | **OAuth 2.0:** Implemented Google OAuth via `passport-google-oauth20` |
 
 ## How to Run the Application Locally
 

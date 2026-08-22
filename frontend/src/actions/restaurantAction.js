@@ -31,7 +31,7 @@ async(dispatch) =>{
     }catch(error) {
         dispatch({
             type: ALL_RESTAURANTS_FAIL,
-            payload: error.response.data.message,
+            payload: error.response?.data?.message || error.message,
         });
     }
 };

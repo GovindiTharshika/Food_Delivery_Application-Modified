@@ -81,11 +81,23 @@ exports.signup = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Please upload an image file", 400));
   }
 
-  const result = await cloudinary.uploader.upload(req.body.avatar, {
-    folder: "avatars",
-    width: 150,
-    crop: "scale",
-  });
+  let avatar = {
+    public_id: "default_avatar",
+    url: "/images/images.png",
+  };
+
+  if (req.body.avatar) {
+    const result = await cloudinary.uploader.upload(req.body.avatar, {
+      folder: "avatars",
+      width: 150,
+      crop: "scale",
+    });
+
+    avatar = {
+      public_id: result.public_id,
+      url: result.secure_url,
+    };
+  }
 
   const user = await User.create({
     name,
@@ -93,10 +105,7 @@ exports.signup = catchAsyncErrors(async (req, res, next) => {
     password,
     passwordConfirm,
     phoneNumber,
-    avatar: {
-      public_id: result.public_id,
-      url: result.secure_url,
-    },
+    avatar,
   });
 
   createSendToken(user, 200, res);
