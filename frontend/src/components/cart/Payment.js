@@ -108,7 +108,7 @@ const Payment = () => {
       }
     } catch (error) {
       document.querySelector("#pay_btn").disabled = false;
-      alert.error(error.response.data.message);
+      alert.error(error.response?.data?.message || error.message || "Payment failed");
     }
   };
 

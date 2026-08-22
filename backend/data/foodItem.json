@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Margherita Pizza",
+    "price": 10.99,
+    "description": "Classic cheese and tomato pizza.",
+    "ratings": 4.5,
+    "images": [
+      {
+        "public_id": "pizza_margherita",
+        "url": "https://example.com/pizza.jpg"
+      }
+    ],
+    "stock": 50,
+    "numOfReviews": 2,
+    "reviews": []
+  },
+  {
+    "name": "Chicken Burger",
+    "price": 5.99,
+    "description": "Crispy chicken burger with lettuce and mayo.",
+    "ratings": 4.2,
+    "images": [
+      {
+        "public_id": "chicken_burger",
+        "url": "https://example.com/burger.jpg"
+      }
+    ],
+    "stock": 30,
+    "numOfReviews": 1,
+    "reviews": []
+  },
+  {
+    "name": "Caesar Salad",
+    "price": 7.50,
+    "description": "Fresh romaine lettuce, croutons, and caesar dressing.",
+    "ratings": 4.8,
+    "images": [
+      {
+        "public_id": "caesar_salad",
+        "url": "https://example.com/salad.jpg"
+      }
+    ],
+    "stock": 20,
+    "numOfReviews": 0,
+    "reviews": []
+  }
+]

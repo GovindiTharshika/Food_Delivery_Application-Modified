@@ -1,7 +1,37 @@
+# Dependencies
 node_modules/
-.env
-*.log
-.DS_Store
+bower_components/
+frontend/package-lock.json
 
+# Environment files and secrets
+.env
+.env.*
+!.env.example
 backend/config/config.env
-*.env
+
+# Logs and runtime output
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Frontend build and test output
+frontend/build/
+build/
+coverage/
+.cache/
+.parcel-cache/
+
+# Tooling and editor files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+desktop.ini
