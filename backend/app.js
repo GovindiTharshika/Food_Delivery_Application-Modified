@@ -15,6 +15,9 @@ app.use(fileUpload());
 
 const mongoSanitize = require("express-mongo-sanitize");
 app.use(mongoSanitize());
+
+const xss = require("xss-clean");
+app.use(xss());
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
