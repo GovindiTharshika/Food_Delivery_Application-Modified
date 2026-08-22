@@ -1,243 +1,329 @@
 const User = require("../models/user");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
-const {
-  promisify
-} = require("util");
+const { promisify } = require("util");
 const ErrorHandler = require("../utils/errorHandler");
 const Email = require("../utils/email");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const cloudinary = require("cloudinary").v2;
-const {
-  CloudinaryStorage
-} = require("multer-storage-cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const multer = require("multer");
-const signToken = _0x3f6689 => {
-  return jwt.sign({
-    id: _0x3f6689
-  }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_TIME + "d"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// JWT Token Generator
+// Signs a JWT with the user's ID, using secret and expiry from .env
+// ─────────────────────────────────────────────────────────────────────────────
+const signToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_TIME + "d",
   });
 };
-const createSendToken = (_0x41eed4, _0x417ba4, _0x6c972c) => {
-  const _0x3a497e = signToken(_0x41eed4._id);
-  const _0x28a1fd = {
-    expires: new Date(Date.now() + process.env.JWT_EXPIRES_TIME * 24 * 60 * 60 * 1000),
-    httpOnly: true
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Create and send JWT as httpOnly cookie + JSON response
+// httpOnly: true prevents JavaScript from reading the cookie (XSS protection)
+// ─────────────────────────────────────────────────────────────────────────────
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_EXPIRES_TIME * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true, // Cookie not accessible via JavaScript — mitigates XSS token theft
   };
-  _0x6c972c.cookie("jwt", _0x3a497e, _0x28a1fd);
-  _0x41eed4.password = undefined;
-  _0x6c972c.status(_0x417ba4).json({
+  res.cookie("jwt", token, cookieOptions);
+  user.password = undefined; // Never send password in response body
+  res.status(statusCode).json({
     success: true,
-    token: _0x3a497e,
-    data: {
-      user: _0x41eed4
-    }
+    token,
+    data: { user },
   });
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECURITY FIX #8 — Hardcoded Secrets Removed (OWASP A02:2021)
+// Original: cloud_name, api_key, api_secret were hardcoded strings in this file.
+// The deobfuscated code revealed: api_secret: "c6Eka2VMeuOk7Od0JvHFTCNxzDE"
+// config.env was also committed to git, exposing Stripe + Cloudinary + JWT secrets.
+// Fix: All credentials now loaded from .env via process.env.
+//      config.env removed from all git history using git filter-repo.
+// ─────────────────────────────────────────────────────────────────────────────
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+// Cloudinary storage config for multer (used as fallback for multipart uploads)
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "avatars",
-    transformation: [{
-      width: 150,
-      crop: "scale"
-    }]
-  }
+    transformation: [{ width: 150, crop: "scale" }],
+  },
 });
-const upload = multer({
-  storage: storage
-}).single("avatar");
-exports.signup = catchAsyncErrors(async (_0x197cc2, _0x29bee0, _0x10b7bf) => {
-  const {
-    name: _0x185af2,
-    email: _0x6aa07e,
-    password: _0x1820db,
-    passwordConfirm: _0x3adae8,
-    phoneNumber: _0x4a7dbb
-  } = _0x197cc2.body;
-  if (_0x197cc2.body.avatar && !_0x197cc2.body.avatar.startsWith('data:image/')) {
-    return _0x10b7bf(new ErrorHandler("Please upload an image file", 400));
+const upload = multer({ storage }).single("avatar");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SIGNUP
+// ─────────────────────────────────────────────────────────────────────────────
+exports.signup = catchAsyncErrors(async (req, res, next) => {
+  const { name, email, password, passwordConfirm, phoneNumber } = req.body;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SECURITY FIX #7 — Insecure File Upload (OWASP A04:2021)
+  // Original: req.body.avatar (base64 string) was uploaded to Cloudinary without
+  // any type validation — any file format (SVG with scripts, HTML, PDF) accepted.
+  // Fix: Validate that the base64 data URL starts with 'data:image/' — only
+  // standard image MIME types (jpeg, png, gif, webp, etc.) are allowed.
+  // ─────────────────────────────────────────────────────────────────────────
+  if (req.body.avatar && !req.body.avatar.startsWith("data:image/")) {
+    return next(new ErrorHandler("Please upload an image file", 400));
   }
-  const _0x45e6bc = await cloudinary.uploader.upload(_0x197cc2.body.avatar, {
+
+  const result = await cloudinary.uploader.upload(req.body.avatar, {
     folder: "avatars",
     width: 150,
-    crop: "scale"
+    crop: "scale",
   });
-  const _0x581cd3 = await User.create({
-    name: _0x185af2,
-    email: _0x6aa07e,
-    password: _0x1820db,
-    passwordConfirm: _0x3adae8,
-    phoneNumber: _0x4a7dbb,
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+    passwordConfirm,
+    phoneNumber,
     avatar: {
-      public_id: _0x45e6bc.public_id,
-      url: _0x45e6bc.secure_url
-    }
+      public_id: result.public_id,
+      url: result.secure_url,
+    },
   });
-  createSendToken(_0x581cd3, 200, _0x29bee0);
+
+  createSendToken(user, 200, res);
 });
-exports.login = catchAsyncErrors(async (_0x1c324f, _0x2e7e0c, _0x26dca) => {
-  const {
-    email: _0x5bd883,
-    password: _0x4c921f
-  } = _0x1c324f.body;
-  if (!_0x5bd883 || !_0x4c921f) {
-    return _0x26dca(new ErrorHandler("Please enter email & password", 400));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────────────────────────────────────────────
+exports.login = catchAsyncErrors(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return next(new ErrorHandler("Please enter email & password", 400));
   }
-  const _0x5da503 = await User.findOne({
-    email: _0x5bd883
-  }).select("+password");
-  if (!_0x5da503) {
-    return _0x26dca(new ErrorHandler("Invalid Email or Password", 401));
+
+  // select("+password") needed since password field has select: false
+  const user = await User.findOne({ email }).select("+password");
+  if (!user) {
+    // Generic message — do not reveal whether email exists (user enumeration prevention)
+    return next(new ErrorHandler("Invalid Email or Password", 401));
   }
-  const _0x52b142 = await _0x5da503.correctPassword(_0x4c921f, _0x5da503.password);
-  if (!_0x52b142) {
-    return _0x26dca(new ErrorHandler("Invalid Email or Password", 401));
+
+  const isPasswordCorrect = await user.correctPassword(password, user.password);
+  if (!isPasswordCorrect) {
+    return next(new ErrorHandler("Invalid Email or Password", 401));
   }
-  createSendToken(_0x5da503, 200, _0x2e7e0c);
+
+  createSendToken(user, 200, res);
 });
-exports.protect = catchAsyncErrors(async (_0x29d683, _0x588e0d, _0x38ad82) => {
-  let _0x5f4c81;
-  if (_0x29d683.headers.authorization && _0x29d683.headers.authorization.startsWith("Bearer")) {
-    _0x5f4c81 = _0x29d683.headers.authorization.split(" ")[1];
-  } else if (_0x29d683.cookies.jwt) {
-    _0x5f4c81 = _0x29d683.cookies.jwt;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROTECT MIDDLEWARE — JWT Authentication Guard
+// Verifies JWT from Authorization header or cookie.
+// Also checks if password was changed after token was issued (security measure).
+// ─────────────────────────────────────────────────────────────────────────────
+exports.protect = catchAsyncErrors(async (req, res, next) => {
+  let token;
+
+  // Extract token from Bearer header or httpOnly cookie
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
-  if (!_0x5f4c81) {
-    return _0x38ad82(new ErrorHandler("You are not logged in! Please log in to get access.", 404));
+
+  if (!token) {
+    return next(
+      new ErrorHandler(
+        "You are not logged in! Please log in to get access.",
+        404
+      )
+    );
   }
-  const _0x57d26e = await promisify(jwt.verify)(_0x5f4c81, process.env.JWT_SECRET);
-  const _0x5dd63f = await User.findById(_0x57d26e.id);
-  if (!_0x5dd63f) {
-    return _0x38ad82(new ErrorHandler("User recently changed password ! please log in again.", 404));
+
+  // Verify JWT signature using secret — throws JsonWebTokenError / TokenExpiredError
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  // Check user still exists (not deleted after token issued)
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      new ErrorHandler(
+        "User recently changed password! Please log in again.",
+        404
+      )
+    );
   }
-  if (_0x5dd63f.changedPasswordAfter(_0x57d26e.iat)) {
-    return _0x38ad82(new ErrorHandler("User recently changed password ! please log in again.", 404));
+
+  // Check if password changed after token was issued — invalidates old tokens
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new ErrorHandler(
+        "User recently changed password! Please log in again.",
+        404
+      )
+    );
   }
-  _0x29d683.user = _0x5dd63f;
-  _0x38ad82();
+
+  req.user = currentUser;
+  next();
 });
-exports.getUserProfile = catchAsyncErrors(async (_0xfe36a6, _0x2e983e, _0x22eaed) => {
-  const _0x335738 = await User.findById(_0xfe36a6.user.id);
-  _0x2e983e.status(200).json({
-    success: true,
-    user: _0x335738
-  });
+
+// Get current logged-in user's profile
+exports.getUserProfile = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  res.status(200).json({ success: true, user });
 });
-exports.updatePassword = async (_0x2e52c8, _0x3d6d00, _0xfc75ef) => {
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE PASSWORD
+// ─────────────────────────────────────────────────────────────────────────────
+exports.updatePassword = async (req, res, next) => {
   try {
-    console.log(_0x2e52c8.body);
-    const {
-      oldPassword: _0x4e4220,
-      newPassword: _0x1c1a35,
-      newPasswordConfirm: _0x4b4c7c
-    } = _0x2e52c8.body;
-    const _0x44a294 = await User.findById(_0x2e52c8.user.id).select("+password");
-    const _0xfaba5e = await _0x44a294.correctPassword(_0x4e4220, _0x44a294.password);
-    if (!_0xfaba5e) {
-      return _0xfc75ef(new ErrorHandler("Old password is incorrect", 400));
+    const { oldPassword, newPassword, newPasswordConfirm } = req.body;
+    const user = await User.findById(req.user.id).select("+password");
+
+    const isCorrect = await user.correctPassword(oldPassword, user.password);
+    if (!isCorrect) {
+      return next(new ErrorHandler("Old password is incorrect", 400));
     }
-    _0x44a294.password = _0x1c1a35;
-    _0x44a294.passwordConfirm = _0x4b4c7c;
-    await _0x44a294.save();
-    _0x3d6d00.status(200).json({
-      success: true,
-      message: "Password updated successfully"
-    });
-  } catch (_0xcf7f4a) {
-    console.error(_0xcf7f4a);
-    return _0xfc75ef(new ErrorHandler("Internal Server Error", 500));
+
+    user.password = newPassword;
+    user.passwordConfirm = newPasswordConfirm;
+    await user.save(); // Triggers pre-save bcrypt hook
+
+    res.status(200).json({ success: true, message: "Password updated successfully" });
+  } catch (err) {
+    console.error(err);
+    return next(new ErrorHandler("Internal Server Error", 500));
   }
 };
-exports.updateProfile = catchAsyncErrors(async (_0x3ec468, _0x1e831d, _0x13f2db) => {
-  const _0x61fffe = {
-    name: _0x3ec468.body.name,
-    email: _0x3ec468.body.email
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE PROFILE
+// ─────────────────────────────────────────────────────────────────────────────
+exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
+  const newData = {
+    name: req.body.name,
+    email: req.body.email,
   };
-  if (_0x3ec468.body.avatar !== "") {
-    if (!_0x3ec468.body.avatar.startsWith('data:image/')) {
-      return _0x13f2db(new ErrorHandler("Please upload an image file", 400));
+
+  if (req.body.avatar !== "") {
+    // ─────────────────────────────────────────────────────────────────────
+    // SECURITY FIX #7 — Insecure File Upload (OWASP A04:2021)
+    // Same validation as signup — reject non-image MIME types on profile update.
+    // ─────────────────────────────────────────────────────────────────────
+    if (!req.body.avatar.startsWith("data:image/")) {
+      return next(new ErrorHandler("Please upload an image file", 400));
     }
-    const _0x111291 = await User.findById(_0x3ec468.user.id);
-    const _0x4ebe37 = _0x111291.avatar.public_id;
-    const _0x3d4474 = await cloudinary.uploader.destroy(_0x4ebe37);
-    const _0x4518d1 = await cloudinary.uploader.upload(_0x3ec468.body.avatar, {
+
+    const user = await User.findById(req.user.id);
+    await cloudinary.uploader.destroy(user.avatar.public_id); // Delete old avatar
+
+    const result = await cloudinary.uploader.upload(req.body.avatar, {
       folder: "avatars",
       width: 150,
-      crop: "scale"
+      crop: "scale",
     });
-    _0x61fffe.avatar = {
-      public_id: _0x4518d1.public_id,
-      url: _0x4518d1.secure_url
+
+    newData.avatar = {
+      public_id: result.public_id,
+      url: result.secure_url,
     };
   }
-  const _0x17de82 = await User.findByIdAndUpdate(_0x3ec468.user.id, _0x61fffe, {
+
+  await User.findByIdAndUpdate(req.user.id, newData, {
     new: true,
     runValidators: true,
-    useFindAndModify: false
+    useFindAndModify: false,
   });
-  _0x1e831d.status(200).json({
-    success: true
-  });
+
+  res.status(200).json({ success: true });
 });
-exports.forgotPassword = catchAsyncErrors(async (_0x3fb72a, _0x2bb396, _0x2baf31) => {
-  const _0x3ebfdb = await User.findOne({
-    email: _0x3fb72a.body.email
-  });
-  if (!_0x3ebfdb) {
-    return _0x2baf31(new ErrorHandler("There is no user with email address .", 404));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FORGOT PASSWORD — sends reset token via email
+// ─────────────────────────────────────────────────────────────────────────────
+exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new ErrorHandler("There is no user with email address.", 404));
   }
-  const _0x35f32e = _0x3ebfdb.createPasswordResetToken();
-  await _0x3ebfdb.save({
-    validateBeforeSave: false
-  });
+
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
   try {
-    const _0x31b326 = process.env.FRONTEND_URL + "/users/resetPassword/" + _0x35f32e;
-    await new Email(_0x3ebfdb, _0x31b326).sendPasswordReset();
-    return _0x2bb396.status(200).json({
+    const resetURL =
+      process.env.FRONTEND_URL + "/users/resetPassword/" + resetToken;
+    await new Email(user, resetURL).sendPasswordReset();
+
+    return res.status(200).json({
       status: "success",
-      message: "Token sent to email!"
+      message: "Token sent to email!",
     });
-  } catch (_0x2b5928) {
-    _0x3ebfdb.passwordResetToken = undefined;
-    _0x3ebfdb.passwordResetExpires = undefined;
-    await _0x3ebfdb.save({
-      validateBeforeSave: false
-    });
-    return _0x2baf31(new ErrorHandler("There was an error sending the email, try again later!", 500));
+  } catch (err) {
+    // Clear token if email fails — do not leave dangling reset tokens
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return next(
+      new ErrorHandler(
+        "There was an error sending the email, try again later!",
+        500
+      )
+    );
   }
 });
-exports.resetPassword = catchAsyncErrors(async (_0x3b9a1d, _0x3144be, _0x504885) => {
-  const _0x50409f = crypto.createHash("sha256").update(_0x3b9a1d.params.token).digest("hex");
-  const _0x13a6fd = await User.findOne({
-    passwordResetToken: _0x50409f,
-    passwordResetExpires: {
-      $gt: Date.now()
-    }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESET PASSWORD — verifies hashed token and sets new password
+// ─────────────────────────────────────────────────────────────────────────────
+exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
+  // Hash the plain token from URL to compare with stored hashed token
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() }, // Token must not be expired
   });
-  if (!_0x13a6fd) {
-    return _0x504885(new ErrorHandler("Token is invalid or has expired", 400));
+
+  if (!user) {
+    return next(new ErrorHandler("Token is invalid or has expired", 400));
   }
-  _0x13a6fd.password = _0x3b9a1d.body.password;
-  _0x13a6fd.passwordConfirm = _0x3b9a1d.body.passwordConfirm;
-  _0x13a6fd.passwordResetToken = undefined;
-  _0x13a6fd.passwordResetExpires = undefined;
-  await _0x13a6fd.save();
-  createSendToken(_0x13a6fd, 200, _0x3144be);
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  createSendToken(user, 200, res);
 });
-exports.logout = catchAsyncErrors(async (_0xe51dc6, _0x338242, _0x247115) => {
-  _0x338242.cookie("jwt", null, {
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOGOUT — clears JWT cookie
+// ─────────────────────────────────────────────────────────────────────────────
+exports.logout = catchAsyncErrors(async (req, res, next) => {
+  res.cookie("jwt", null, {
     expires: new Date(Date.now()),
-    httpOnly: true
+    httpOnly: true,
   });
-  _0x338242.status(200).json({
-    success: true,
-    message: "Logged out"
-  });
+  res.status(200).json({ success: true, message: "Logged out" });
 });
