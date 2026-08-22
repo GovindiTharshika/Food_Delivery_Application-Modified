@@ -18,6 +18,14 @@ app.use(mongoSanitize());
 
 const xss = require("xss-clean");
 app.use(xss());
+
+const rateLimit = require("express-rate-limit");
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 15 * 60 * 1000,
+  message: "Too many requests from this IP, please try again in 15 minutes."
+});
+app.use("/api", limiter);
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
