@@ -36,9 +36,9 @@ const createSendToken = (_0x41eed4, _0x417ba4, _0x6c972c) => {
   });
 };
 cloudinary.config({
-  cloud_name: "df8dnez80",
-  api_key: "385231413173631",
-  api_secret: "c6Eka2VMeuOk7Od0JvHFTCNxzDE"
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
