@@ -48,6 +48,14 @@ const createSendToken = (user, statusCode, res) => {
 // Fix: All credentials now loaded from .env via process.env.
 //      config.env removed from all git history using git filter-repo.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// cloudinary.config({
+//   cloud_name: "hardcoded_cloud_name",
+//   api_key: "hardcoded_api_key",
+//   api_secret: "hardcoded_api_secret",
+// });
+
+// FIXED CODE:
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -77,6 +85,10 @@ exports.signup = catchAsyncErrors(async (req, res, next) => {
   // Fix: Validate that the base64 data URL starts with 'data:image/' — only
   // standard image MIME types (jpeg, png, gif, webp, etc.) are allowed.
   // ─────────────────────────────────────────────────────────────────────────
+  // ORIGINAL VULNERABLE CODE:
+  // // (No image type validation was performed on req.body.avatar)
+
+  // FIXED CODE:
   if (req.body.avatar && !req.body.avatar.startsWith("data:image/")) {
     return next(new ErrorHandler("Please upload an image file", 400));
   }
@@ -235,6 +247,10 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
     // SECURITY FIX #7 — Insecure File Upload (OWASP A04:2021)
     // Same validation as signup — reject non-image MIME types on profile update.
     // ─────────────────────────────────────────────────────────────────────
+    // ORIGINAL VULNERABLE CODE:
+    // // (No image type validation was performed on req.body.avatar)
+
+    // FIXED CODE:
     if (!req.body.avatar.startsWith("data:image/")) {
       return next(new ErrorHandler("Please upload an image file", 400));
     }

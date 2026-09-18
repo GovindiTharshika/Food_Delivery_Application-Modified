@@ -14,6 +14,10 @@ const errorMiddleware = require("./middlewares/errors");
 // clickjacking, MIME-sniffing, and revealing "X-Powered-By: Express".
 // Fix: helmet() sets X-Frame-Options, X-Content-Type-Options, HSTS, CSP, etc.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// // (No helmet middleware was used here)
+
+// FIXED CODE:
 const helmet = require("helmet");
 app.use(helmet());
 
@@ -51,6 +55,10 @@ require("./utils/passport");
 // Fix: express-mongo-sanitize strips keys beginning with '$' or containing '.'
 // from req.body, req.query, and req.params before they reach any controller.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// // (No express-mongo-sanitize middleware was used here)
+
+// FIXED CODE:
 const mongoSanitize = require("express-mongo-sanitize");
 app.use(mongoSanitize());
 
@@ -60,6 +68,10 @@ app.use(mongoSanitize());
 // Attackers could inject <script> tags that execute in victims' browsers.
 // Fix: xss-clean encodes dangerous HTML characters in all incoming request data.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// // (No xss-clean middleware was used here)
+
+// FIXED CODE:
 const xss = require("xss-clean");
 app.use(xss());
 
@@ -70,6 +82,10 @@ app.use(xss());
 // Fix: express-rate-limit restricts each IP to 100 requests per 15 minutes
 // across all /api routes. Returns 429 Too Many Requests on violation.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// // (No express-rate-limit middleware was used here)
+
+// FIXED CODE:
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
   max: 100,                              // Maximum 100 requests per window
@@ -86,6 +102,14 @@ app.use("/api", limiter);               // Applied to ALL /api/* routes
 // Fix: All credentials loaded from environment variables via .env file.
 //      config.env removed from git history using git-filter-repo.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// cloudinary.config({
+//   cloud_name: "hardcoded_cloud_name",
+//   api_key: "hardcoded_api_key",
+//   api_secret: "hardcoded_api_secret"
+// });
+
+// FIXED CODE:
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,

@@ -53,6 +53,11 @@ exports.getSingleOrder = catchAsyncErrors(async (req, res, next) => {
   // Fix: Compare order.user._id with req.user.id — only the owner or an admin
   // is allowed to view the order. Returns 403 Forbidden for unauthorized access.
   // ─────────────────────────────────────────────────────────────────────────
+  // ORIGINAL VULNERABLE CODE:
+  // // (No authorization check was performed before sending the response)
+  // res.status(200).json({ success: true, order });
+
+  // FIXED CODE:
   if (
     order.user._id.toString() !== req.user.id &&
     req.user.role !== "admin"
