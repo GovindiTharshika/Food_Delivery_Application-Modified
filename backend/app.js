@@ -51,6 +51,10 @@ require("./utils/passport");
 // Fix: express-mongo-sanitize strips keys beginning with '$' or containing '.'
 // from req.body, req.query, and req.params before they reach any controller.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// // (No express-mongo-sanitize middleware was used here)
+
+// FIXED CODE:
 const mongoSanitize = require("express-mongo-sanitize");
 app.use(mongoSanitize());
 
