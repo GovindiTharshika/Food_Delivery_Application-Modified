@@ -14,6 +14,10 @@ const errorMiddleware = require("./middlewares/errors");
 // clickjacking, MIME-sniffing, and revealing "X-Powered-By: Express".
 // Fix: helmet() sets X-Frame-Options, X-Content-Type-Options, HSTS, CSP, etc.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// // (No helmet middleware was used here)
+
+// FIXED CODE:
 const helmet = require("helmet");
 app.use(helmet());
 
