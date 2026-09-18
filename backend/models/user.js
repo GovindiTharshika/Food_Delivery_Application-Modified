@@ -30,6 +30,15 @@ const userSchema = new mongoose.Schema({
   //   • At least one special character (@$!%*?&)
   // This prevents dictionary attacks and credential stuffing.
   // ─────────────────────────────────────────────────────────────────────────
+  // ORIGINAL VULNERABLE CODE:
+  // password: {
+  //   type: String,
+  //   required: [true, "Please enter your password"],
+  //   minlength: [6, "Your password must be longer than 6 characters"],
+  //   select: false,
+  // },
+
+  // FIXED CODE:
   password: {
     type: String,
     required: [true, "Please enter your password"],
