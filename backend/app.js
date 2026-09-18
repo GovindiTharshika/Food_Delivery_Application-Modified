@@ -78,6 +78,10 @@ app.use(xss());
 // Fix: express-rate-limit restricts each IP to 100 requests per 15 minutes
 // across all /api routes. Returns 429 Too Many Requests on violation.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// // (No express-rate-limit middleware was used here)
+
+// FIXED CODE:
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
   max: 100,                              // Maximum 100 requests per window
