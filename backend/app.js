@@ -104,9 +104,9 @@ app.use("/api", limiter);               // Applied to ALL /api/* routes
 // ─────────────────────────────────────────────────────────────────────────────
 // ORIGINAL VULNERABLE CODE:
 // cloudinary.config({
-//   cloud_name: "hardcoded_cloud_name",
-//   api_key: "hardcoded_api_key",
-//   api_secret: "hardcoded_api_secret"
+//   cloud_name: "df8dnez80",
+//   api_key: "385231413173631",
+//   api_secret: "c6Eka2VMeuOk7Od0JvHFTCNxzDE"
 // });
 
 // FIXED CODE:
