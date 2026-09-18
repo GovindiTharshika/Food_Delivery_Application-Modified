@@ -64,6 +64,10 @@ app.use(mongoSanitize());
 // Attackers could inject <script> tags that execute in victims' browsers.
 // Fix: xss-clean encodes dangerous HTML characters in all incoming request data.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// // (No xss-clean middleware was used here)
+
+// FIXED CODE:
 const xss = require("xss-clean");
 app.use(xss());
 
