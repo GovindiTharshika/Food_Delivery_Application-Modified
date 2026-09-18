@@ -48,6 +48,14 @@ const createSendToken = (user, statusCode, res) => {
 // Fix: All credentials now loaded from .env via process.env.
 //      config.env removed from all git history using git filter-repo.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// cloudinary.config({
+//   cloud_name: "hardcoded_cloud_name",
+//   api_key: "hardcoded_api_key",
+//   api_secret: "hardcoded_api_secret",
+// });
+
+// FIXED CODE:
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,

@@ -102,6 +102,14 @@ app.use("/api", limiter);               // Applied to ALL /api/* routes
 // Fix: All credentials loaded from environment variables via .env file.
 //      config.env removed from git history using git-filter-repo.
 // ─────────────────────────────────────────────────────────────────────────────
+// ORIGINAL VULNERABLE CODE:
+// cloudinary.config({
+//   cloud_name: "hardcoded_cloud_name",
+//   api_key: "hardcoded_api_key",
+//   api_secret: "hardcoded_api_secret"
+// });
+
+// FIXED CODE:
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
