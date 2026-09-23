@@ -129,6 +129,13 @@ const payment = require("./routes/payment");
 app.use(express.json({ limit: "30kb" }));
 app.use(express.urlencoded({ extended: true, limit: "30kb" }));
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "OrderIt API is running",
+  });
+});
+
 app.use("/api/v1/eats", foodRouter);
 app.use("/api/v1/eats/menus", menuRouter);
 app.use("/api/v1/eats/stores", restaurant);
