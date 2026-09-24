@@ -17,6 +17,7 @@ import UpdateProfile from "./components/user/UpdateProfile";
 import ForgotPassword from "./components/user/ForgotPassword";
 import NewPassword from "./components/user/NewPassword";
 import ConfirmOrder from "./components/cart/ConfirmOrder";
+import OAuthSuccess from "./components/user/OAuthSuccess";
 
 
 //Payment
@@ -59,11 +60,12 @@ function App() {
             {/* user */}
             <Route path = "/users/login" element = {<Login />} exact/>
             <Route path = "/users/signup" element ={<Register />} exact/>
-            <Route  path = "/users/me" element = {<Profile/>} exact/>
+            <Route path = "/users/me" element = {<Profile/>} exact/>
             <Route path = "/users/me/update" element = {<UpdateProfile/>} exact/>
             <Route path = "/users/forgetPassword" element ={<ForgotPassword/>} exact/>
             <Route path = "/users/resetPassword/:token" element ={<NewPassword/>} exact/>
             <Route path = "/confirm" element = {<ConfirmOrder />} />
+            <Route path = "/oauth/success" element={<OAuthSuccess />} />
           
 
           {/* Payment */}
