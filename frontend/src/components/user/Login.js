@@ -68,6 +68,14 @@ const Login = () => {
                 >
                   LOGIN
                 </button>
+                
+                <a
+                  href="http://localhost:4000/api/v1/users/auth/google"
+                  className="btn btn-block py3 mt-3"
+                  style={{ backgroundColor: '#db4437', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                >
+                  <i className="fa-brands fa-google mr-2" style={{ marginRight: '8px' }}></i> LOGIN WITH GOOGLE
+                </a>
 
                 <Link to="/users/signup" className="float-right mt-3">
                   NEW USER?
