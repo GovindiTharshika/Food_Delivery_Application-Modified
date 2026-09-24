@@ -13,7 +13,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-connectDatabase();
+connectDatabase().catch((error) => {
+  console.error(`Database unavailable: ${error.message}`);
+});
 
 const port = process.env.PORT || 4000;
 const server = app.listen(port, () => {
@@ -22,7 +24,6 @@ const server = app.listen(port, () => {
 
 process.on("unhandledRejection", (error) => {
   console.error(`Unhandled promise rejection: ${error.message}`);
-  server.close(() => process.exit(1));
 });
 
 process.on("uncaughtException", (error) => {
