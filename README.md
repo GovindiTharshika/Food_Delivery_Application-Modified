@@ -19,7 +19,7 @@
 
 - **YouTube Presentation Video:**  
   *(Insert your YouTube video link here - Max 20 mins)*  
-   [https://www.youtube.com/watch?v=f85TUtzy8js(https://www.youtube.com/watch?v=f85TUtzy8js)]
+   [https://www.youtube.com/watch?v=f85TUtzy8js](https://www.youtube.com/watch?v=f85TUtzy8js)
 
 ---
 
