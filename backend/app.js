@@ -88,7 +88,7 @@ app.use(xss());
 // FIXED CODE:
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
-  max: 100,                              // Maximum 100 requests per window
+  max: 10,                              // Maximum 100 requests per window
   windowMs: 15 * 60 * 1000,             // 15-minute sliding window
   message:
     "Too many requests from this IP, please try again in 15 minutes.",

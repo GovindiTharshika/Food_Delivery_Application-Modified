@@ -89,8 +89,12 @@ exports.signup = catchAsyncErrors(async (req, res, next) => {
   // // (No image type validation was performed on req.body.avatar)
 
   // FIXED CODE:
-  if (req.body.avatar && !req.body.avatar.startsWith("data:image/")) {
-    return next(new ErrorHandler("Please upload an image file", 400));
+  if (req.body.avatar) {
+    const allowedTypes = ["data:image/jpeg", "data:image/jpg", "data:image/png", "data:image/webp", "data:image/gif"];
+    const isAllowed = allowedTypes.some((type) => req.body.avatar.startsWith(type));
+    if (!isAllowed) {
+      return next(new ErrorHandler("Please upload a valid image file (JPEG, PNG, WEBP, GIF). SVG files are not allowed for security reasons.", 400));
+    }
   }
 
   let avatar = {
@@ -251,8 +255,10 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
     // // (No image type validation was performed on req.body.avatar)
 
     // FIXED CODE:
-    if (!req.body.avatar.startsWith("data:image/")) {
-      return next(new ErrorHandler("Please upload an image file", 400));
+    const allowedTypes = ["data:image/jpeg", "data:image/jpg", "data:image/png", "data:image/webp", "data:image/gif"];
+    const isAllowed = allowedTypes.some((type) => req.body.avatar.startsWith(type));
+    if (!isAllowed) {
+      return next(new ErrorHandler("Please upload a valid image file (JPEG, PNG, WEBP, GIF). SVG files are not allowed for security reasons.", 400));
     }
 
     const user = await User.findById(req.user.id);
